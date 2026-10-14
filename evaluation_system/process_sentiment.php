@@ -476,72 +476,36 @@ function analyzeSentiment($text, $rating = null) {
     }
 
     // =========================================================================
-    // 3. COMBINED DETERMINATION — Text Sentiment Score + Numerical Rating
+    // 3. COMBINED DETERMINATION — Text Sentiment Score Takes Priority
     // =========================================================================
-    // Strictly enforces:
-    //   - High rating (≥3.5) + Good/Neutral comment = POSITIVE
-    //   - Low rating (<3.0) + Bad/Neutral comment = NEGATIVE
-    //   - Abusive/Vulgar insults = ALWAYS NEGATIVE (100% safe)
-    //   - Severe complaints override high ratings (NEGATIVE)
-    //   - Overwhelming praise overrides low ratings (POSITIVE)
-    //   - Mixed/Conflicting cases: balanced weighting (Text 45%, Rating 55%)
+    // The student's written comment (in English, Filipino, or Taglish) is the
+    // primary determinant of sentiment:
+    //   - Profanity / Severe insults = ALWAYS Negative
+    //   - If comment is Good/Positive (score > 0) = POSITIVE (even if rating is lowest)
+    //   - If comment is Bad/Negative (score < 0) = NEGATIVE (even if rating is highest)
+    //   - If comment is Neutral (score == 0) or empty = Fallback to numerical rating
+    // =========================================================================
 
-    if ($rating !== null) {
-        // Severe insults/profanity ALWAYS result in Negative regardless of rating
-        if ($has_severe_vulgar) {
-            return 'Negative';
-        }
-
-        // 1. High rating (>= 3.5) + positive or neutral text -> POSITIVE
-        if ($rating >= 3.5 && $score >= 0) {
-            return 'Positive';
-        }
-
-        // 2. Low rating (< 3.0) + negative or neutral text -> NEGATIVE
-        if ($rating < 3.0 && $score <= 0) {
-            return 'Negative';
-        }
-
-        // Convert rating to comparable score scale (-6.0 to +6.0)
-        $rating_score = ($rating - 3.0) * 3.0;
-
-        // If text has no sentiment (score == 0), rely on rating entirely
-        if ($score == 0) {
-            return ($rating >= 3.0) ? 'Positive' : 'Negative';
-        }
-
-        // Severe complaints or insults override high ratings
-        if ($score <= -8) {
-            return 'Negative';
-        }
-
-        // Overwhelming praise overrides low ratings
-        if ($score >= 8) {
-            return 'Positive';
-        }
-
-        // Weight text (45%) and rating (55%)
-        $combined = ($score * 0.45) + ($rating_score * 0.55);
-
-        if ($combined > 0) {
-            return 'Positive';
-        } elseif ($combined < 0) {
-            return 'Negative';
-        }
-
-        return ($rating >= 3.0) ? 'Positive' : 'Negative';
-    }
-
-    // No rating provided — pure text analysis
+    // Severe insults/profanity ALWAYS result in Negative regardless of rating
     if ($has_severe_vulgar) {
         return 'Negative';
     }
+
+    // 1. Text has positive sentiment -> Always POSITIVE (even if rating is 1.0)
     if ($score > 0) {
         return 'Positive';
-    } elseif ($score < 0) {
+    }
+
+    // 2. Text has negative sentiment -> Always NEGATIVE (even if rating is 5.0)
+    if ($score < 0) {
         return 'Negative';
     }
 
-    // Neutral text, no rating
+    // 3. Text has no detected sentiment (score == 0, e.g. "N/A", "None") -> Fallback to rating
+    if ($rating !== null) {
+        return ($rating >= 3.0) ? 'Positive' : 'Negative';
+    }
+
+    // Pure neutral text without rating
     return 'Positive';
 }
