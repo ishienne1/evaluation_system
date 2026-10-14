@@ -109,13 +109,23 @@ $system_name = $system_name_result ? ($system_name_result->fetch_assoc()['settin
         }
 
         @keyframes slowFloatA {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(25px, 20px) scale(1.03); }
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(25px, 20px) scale(1.03);
+            }
         }
 
         @keyframes slowFloatB {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(-20px, 25px) scale(0.97); }
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(-20px, 25px) scale(0.97);
+            }
         }
 
         /* Floating Background Icons */
@@ -342,8 +352,17 @@ $system_name = $system_name_result ? ($system_name_result->fetch_assoc()['settin
         }
 
         @keyframes ringPulse {
-            0%, 100% { opacity: 0.35; transform: scale(1); }
-            50% { opacity: 0.75; transform: scale(1.03); }
+
+            0%,
+            100% {
+                opacity: 0.35;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.75;
+                transform: scale(1.03);
+            }
         }
 
         .hero-logo {

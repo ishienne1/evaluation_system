@@ -54,10 +54,15 @@ if (isset($_POST['find_account'])) {
             $user_row = $result->fetch_assoc();
             $role_val = $user_row['role'] ?? 'student';
             // Trigger OTP send via reusable logic (call send_otp.php logic inline)
-            require_once __DIR__ . '/PHPMailer/src/Exception.php';
-            require_once __DIR__ . '/PHPMailer/src/PHPMailer.php';
-            require_once __DIR__ . '/PHPMailer/src/SMTP.php';
+            $phpmailer_dir = file_exists(__DIR__ . '/PHPMailer/src/PHPMailer.php')
+                ? __DIR__ . '/PHPMailer/src'
+                : __DIR__ . '/../PHPMailer/src';
+
+            require_once $phpmailer_dir . '/Exception.php';
+            require_once $phpmailer_dir . '/PHPMailer.php';
+            require_once $phpmailer_dir . '/SMTP.php';
             include_once 'email_config.php';
+
 
             // Rate limiting
             $rate_check = $conn->prepare("SELECT COUNT(*) FROM email_otp WHERE email = ? AND purpose = 'reset' AND created_at > DATE_SUB(NOW(), INTERVAL 10 MINUTE)");
@@ -92,6 +97,7 @@ if (isset($_POST['find_account'])) {
                     $mail->Password   = SMTP_PASSWORD;
                     $mail->SMTPSecure = SMTP_SECURE;
                     $mail->Port       = SMTP_PORT;
+                    $mail->Timeout    = 10;
 
                     // LOCAL XAMPP FIX: Disable SSL verification which causes "Network Error" hangs
                     $mail->SMTPOptions = array(
@@ -160,16 +166,46 @@ if (isset($_POST['find_account'])) {
                       </table>
                     </body></html>";
                     $mail->AltBody = "Your Password Reset Code: {$otp_code}\n\nValid for 10 minutes.";
-                    $mail->send();
 
-                    // Store email in session and move to step 2
-                    $_SESSION['reset_otp_email'] = $email;
-                    $_SESSION['reset_otp_sent_at'] = time();
-                    $step = 2;
-                    $success = "A verification code has been sent to your email.";
+                    $is_localhost = in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'])
+                        || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false
+                        || strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false;
 
-                } catch (MailException $e) {
-                    $error = "Could not send reset email. Error: " . $mail->ErrorInfo;
+                    $mail_sent = false;
+                    $mail_error = '';
+
+                    try {
+                        $mail->send();
+                        $mail_sent = true;
+                    } catch (Exception $sendEx) {
+                        $mail_error = $mail->ErrorInfo;
+                        if ($mail->Port != 2525 && (strpos(SMTP_HOST, 'brevo.com') !== false || strpos(SMTP_HOST, 'sendinblue') !== false)) {
+                            try {
+                                $mail->Port = 2525;
+                                $mail->send();
+                                $mail_sent = true;
+                            } catch (Exception $retryEx) {
+                                $mail_error = $mail->ErrorInfo;
+                            }
+                        }
+                    }
+
+                    if ($mail_sent) {
+                        $_SESSION['reset_otp_email'] = $email;
+                        $_SESSION['reset_otp_sent_at'] = time();
+                        $step = 2;
+                        $success = "A verification code has been sent to your email.";
+                    } elseif ($is_localhost) {
+                        $_SESSION['reset_otp_email'] = $email;
+                        $_SESSION['reset_otp_sent_at'] = time();
+                        $step = 2;
+                        $success = "Dev Mode (Localhost): Reset OTP is {$otp_code}";
+                    } else {
+                        $error = "Could not send reset email. Error: " . $mail_error;
+                    }
+
+                } catch (Exception $e) {
+                    $error = "Error preparing email: " . $e->getMessage();
                 }
             }
         } else {

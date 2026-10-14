@@ -1824,6 +1824,10 @@ if (isset($_POST['register'])) {
                     updBtn();
                     startTimer(120);
                     btn.innerHTML = '<i class="fas fa-redo"></i> Resend';
+                    if (d.otp) {
+                        const otpInput = document.getElementById('otp_inp');
+                        if (otpInput) otpInput.value = d.otp;
+                    }
                     alert(d.message || 'OTP sent successfully! Please check your email.');
                 } else {
                     alert(d.message || 'Failed to send OTP.');

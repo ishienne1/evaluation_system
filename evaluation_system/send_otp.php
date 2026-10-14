@@ -40,9 +40,14 @@ if ($purpose === 'register' && in_array($role, ['admin', 'system admin'])) {
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require 'PHPMailer/src/Exception.php';
-require 'PHPMailer/src/PHPMailer.php';
-require 'PHPMailer/src/SMTP.php';
+$phpmailer_dir = file_exists(__DIR__ . '/PHPMailer/src/PHPMailer.php')
+    ? __DIR__ . '/PHPMailer/src'
+    : __DIR__ . '/../PHPMailer/src';
+
+require_once $phpmailer_dir . '/Exception.php';
+require_once $phpmailer_dir . '/PHPMailer.php';
+require_once $phpmailer_dir . '/SMTP.php';
+
 
 $schools = [
     'mcnp' => [
@@ -128,6 +133,7 @@ try {
     $mail->Password   = SMTP_PASSWORD;
     $mail->SMTPSecure = SMTP_SECURE;
     $mail->Port       = SMTP_PORT;
+    $mail->Timeout    = 10;
 
     // LOCAL XAMPP FIX: Disable SSL verification which causes "Network Error" hangs
     $mail->SMTPOptions = array(
@@ -209,17 +215,55 @@ try {
     </html>";
 
     $mail->AltBody = "Your {$subject_label} Code is: {$otp_code}\n\nThis code is valid for 10 minutes. Do not share it with anyone.";
-    $mail->send();
 
-    echo json_encode(['success' => true, 'message' => "OTP sent to {$email}. Valid for 10 minutes."]);
+    $is_localhost = in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'])
+        || strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false
+        || strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false;
+
+    $mail_sent = false;
+    $mail_error = '';
+
+    try {
+        $mail->send();
+        $mail_sent = true;
+    } catch (Exception $sendEx) {
+        $mail_error = $mail->ErrorInfo;
+        // Port 587 is blocked on DigitalOcean; attempt automatic fallback to port 2525
+        if ($mail->Port != 2525 && (strpos(SMTP_HOST, 'brevo.com') !== false || strpos(SMTP_HOST, 'sendinblue') !== false)) {
+            try {
+                $mail->Port = 2525;
+                $mail->send();
+                $mail_sent = true;
+            } catch (Exception $retryEx) {
+                $mail_error = $mail->ErrorInfo;
+            }
+        }
+    }
+
+    if ($mail_sent) {
+        echo json_encode(['success' => true, 'message' => "OTP sent to {$email}. Valid for 10 minutes."]);
+    } elseif ($is_localhost) {
+        // On localhost: Do not invalidate OTP so developer can test registration without blocking
+        echo json_encode([
+            'success' => true,
+            'dev_mode' => true,
+            'otp' => $otp_code,
+            'message' => "Dev Mode (Localhost): OTP is {$otp_code}\n(Email not sent: {$mail_error})"
+        ]);
+    } else {
+        // On production: Invalidate OTP on send failure
+        $cln = $conn->prepare("UPDATE email_otp SET is_used = 1 WHERE email = ? AND otp_code = ? AND purpose = ?");
+        if ($cln) {
+            $cln->bind_param("sss", $email, $otp_code, $purpose);
+            $cln->execute();
+        }
+        echo json_encode([
+            'success' => false,
+            'message' => 'Could not send OTP email. Please check your email configuration or contact the administrator. Error: ' . $mail_error
+        ]);
+    }
 
 } catch (Exception $e) {
-    // Clean up stored OTP on send failure
-    $cln = $conn->prepare("UPDATE email_otp SET is_used = 1 WHERE email = ? AND otp_code = ? AND purpose = ?");
-    if ($cln) {
-        $cln->bind_param("sss", $email, $otp_code, $purpose);
-        $cln->execute();
-    }
-    echo json_encode(['success' => false, 'message' => 'Could not send OTP email. Please check your email address or contact the administrator. Error: ' . $mail->ErrorInfo]);
+    echo json_encode(['success' => false, 'message' => 'Mailer initialization error: ' . $e->getMessage()]);
 }
 ?>
