@@ -93,6 +93,7 @@ if (isset($_POST['find_account'])) {
                     $mail->isSMTP();
                     $mail->Host       = gethostbyname(SMTP_HOST); 
                     $mail->SMTPAuth   = SMTP_AUTH;
+                    $mail->AuthType   = 'LOGIN';
                     $mail->Username   = SMTP_USERNAME;
                     $mail->Password   = SMTP_PASSWORD;
                     $mail->SMTPSecure = SMTP_SECURE;
@@ -182,6 +183,15 @@ if (isset($_POST['find_account'])) {
                         if ($mail->Port != 2525 && (strpos(SMTP_HOST, 'brevo.com') !== false || strpos(SMTP_HOST, 'sendinblue') !== false)) {
                             try {
                                 $mail->Port = 2525;
+                                $mail->send();
+                                $mail_sent = true;
+                            } catch (Exception $retryEx) {
+                                $mail_error = $mail->ErrorInfo;
+                            }
+                        } elseif ($mail->Port != 465 && strpos(SMTP_HOST, 'gmail.com') !== false) {
+                            try {
+                                $mail->Port = 465;
+                                $mail->SMTPSecure = 'ssl';
                                 $mail->send();
                                 $mail_sent = true;
                             } catch (Exception $retryEx) {
