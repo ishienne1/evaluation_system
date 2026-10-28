@@ -278,26 +278,26 @@ $top_faculty = $top_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         width: 70px; height: 70px; object-fit: contain; position: absolute; right: 15px; top: 0;
     }
     .letterhead-content { text-align: center; width: 100%; padding: 0 95px; }
-    .school-name { font-size: 13pt; font-weight: bold; letter-spacing: 0.2px; color: #000; margin-bottom: 2px; }
-    .school-name-joint { font-size: 10.5pt; font-weight: bold; letter-spacing: 0.2px; color: #000; line-height: 1.25; margin-bottom: 1px; }
+    .school-name { font-size: 13pt; font-weight: bold; letter-spacing: 0.2px; color: #000; margin-bottom: 2px; white-space: nowrap; }
+    .school-name-joint { font-size: 10.5pt; font-weight: bold; letter-spacing: 0.2px; color: #000; line-height: 1.25; margin-bottom: 1px; white-space: nowrap; }
     .school-sub { font-size: 8pt; line-height: 1.35; color: #111; }
 
     .title-control-row {
         display: flex; align-items: center; justify-content: space-between;
         margin-top: 6px; margin-bottom: 6px; width: 100%;
     }
-    .title-spacer { width: 180px; flex-shrink: 0; }
+    .title-spacer { width: 115px; flex-shrink: 0; }
     .title-center { flex: 1; text-align: center; }
     .title-center .office-title { font-size: 10pt; font-weight: bold; }
     .title-center .main-title { font-size: 10.5pt; font-weight: bold; }
     .title-center .sub-title { font-size: 10pt; font-weight: bold; }
 
     .doc-control-box {
-        width: 180px; flex-shrink: 0; margin-left: auto;
+        width: 115px; flex-shrink: 0; margin-left: auto;
         border-collapse: collapse; border: 1px solid #000;
-        font-size: 8pt; line-height: 1.15;
+        font-size: 6.5pt; line-height: 1.15;
     }
-    .doc-control-box td { border: 1px solid #000; padding: 2.5px 5px; color: #000; text-align: left; }
+    .doc-control-box td { border: 1px solid #000; padding: 2px 4px; color: #000; text-align: left; white-space: nowrap; }
 
     .period-bar {
         display: flex; justify-content: space-between; font-size: 9.5pt;
@@ -355,7 +355,7 @@ $top_faculty = $top_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     /* ── FOOTER TABLE (100% PANTAY & NEVER WRAPS) ── */
     .sheet-footer-table {
         width: 100%; border-collapse: collapse; border: none !important;
-        font-size: 6.8pt; line-height: 1.15; margin-top: 4px; white-space: nowrap;
+        font-size: 6.8pt; line-height: 1.15; margin-top: auto; padding-top: 6px; white-space: nowrap;
     }
     .sheet-footer-table td {
         border: none !important; padding: 0 !important;
@@ -375,9 +375,14 @@ $top_faculty = $top_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         .action-bar { display: none !important; }
         .pages-container { padding: 0 !important; gap: 0 !important; }
         .sheet {
-            width: 100% !important; min-height: auto !important; height: auto !important;
+            /* Fill the full printable A4 height so the footer sits at the very bottom */
+            width: 100% !important; min-height: 280mm !important; height: auto !important;
+            display: flex !important; flex-direction: column !important; justify-content: space-between !important;
             box-shadow: none !important; padding: 4mm 6mm 4mm 6mm !important; margin: 0 !important;
             page-break-after: always !important; break-after: page !important;
+        }
+        .sheet:last-child {
+            page-break-after: auto !important; break-after: auto !important;
         }
     }
     </style>

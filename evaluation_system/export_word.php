@@ -288,8 +288,8 @@ table { border-collapse: collapse; width: 100%; }
 .text-center { text-align: center; }
 .bold { font-weight: bold; }
 .italic { font-style: italic; }
-.header-box { border: 1px solid black; font-size: 8pt; width: 180px; }
-.header-box td { border: 1px solid black; padding: 2px 4px; }
+.header-box { border: 1px solid black; font-size: 6.5pt; width: 115px; line-height: 1.15; }
+.header-box td { border: 1px solid black; padding: 2px 4px; white-space: nowrap; }
 .page-break { page-break-before: always; }
 </style>
 </head>
@@ -298,14 +298,14 @@ table { border-collapse: collapse; width: 100%; }
 <!-- Top Header Row with Box at Top Right -->
 <table style="width: 100%; margin-bottom: 8px;">
     <tr>
-        <td style="width: 180px;"></td>
+        <td style="width: 115px;"></td>
         <td class="text-center" style="vertical-align: top;">
-            <div style="font-size: 13pt; font-weight: bold;"><?php echo htmlspecialchars($sc['name']); ?></div>
+            <div style="font-size: 12pt; font-weight: bold; white-space: nowrap;"><?php echo htmlspecialchars($sc['name']); ?></div>
             <div style="font-size: 8pt;"><?php echo htmlspecialchars($sc['address']); ?></div>
             <div style="font-size: 8pt;"><?php echo htmlspecialchars($sc['phone']); ?></div>
             <div style="font-size: 8pt;"><?php echo htmlspecialchars($sc['email']); ?></div>
         </td>
-        <td style="width: 180px; vertical-align: top;" align="right">
+        <td style="width: 115px; vertical-align: top;" align="right">
             <table class="header-box">
                 <tr><td>Document No.<br><b>QMS-DCO-Form No: 013</b></td></tr>
                 <tr><td>Effective Date: <b>July 2019</b></td></tr>

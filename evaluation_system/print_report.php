@@ -398,6 +398,20 @@ if (file_exists($sc['logo'])) {
     }
 
     /* ── LETTERHEAD & TOP HEADER ROW (Box on top right) ── */
+    .letterhead {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 6px;
+        position: relative;
+        min-height: 68px;
+    }
+    .letterhead .letterhead-logo {
+        position: absolute;
+        left: 5px;
+        top: 0;
+    }
     .top-header-row {
         display: flex;
         align-items: flex-start;
@@ -407,7 +421,7 @@ if (file_exists($sc['logo'])) {
         position: relative;
     }
     .top-logo-container {
-        width: 180px;
+        width: 115px;
         flex-shrink: 0;
         display: flex;
         align-items: flex-start;
@@ -422,15 +436,16 @@ if (file_exists($sc['logo'])) {
     .letterhead-content {
         flex: 1;
         text-align: center;
-        padding: 0 5px;
+        padding: 0;
     }
     .school-name {
-        font-size: 13pt;
+        font-size: 12pt;
         font-weight: bold;
         letter-spacing: 0.2px;
         color: #000;
         margin-bottom: 2px;
         line-height: 1.15;
+        white-space: nowrap; /* keep the school name on ONE line */
     }
     .school-sub {
         font-size: 8pt;
@@ -438,23 +453,24 @@ if (file_exists($sc['logo'])) {
         color: #111;
     }
     .top-doc-box-container {
-        width: 180px;
+        width: 115px;
         flex-shrink: 0;
         display: flex;
         justify-content: flex-end;
     }
     .doc-control-box {
-        width: 180px;
+        width: 115px;
         border-collapse: collapse;
         border: 1px solid #000;
-        font-size: 8pt;
+        font-size: 6.5pt;
         line-height: 1.15;
     }
     .doc-control-box td {
         border: 1px solid #000;
-        padding: 2.5px 5px;
+        padding: 2px 4px;
         color: #000;
         text-align: left;
+        white-space: nowrap;
     }
 
     /* ── TITLES BLOCK ── */
@@ -631,7 +647,8 @@ if (file_exists($sc['logo'])) {
         border: none !important;
         font-size: 6.8pt;
         line-height: 1.15;
-        margin-top: 4px;
+        margin-top: auto;
+        padding-top: 6px;
         white-space: nowrap;
     }
     .sheet-footer-table td {
@@ -696,8 +713,12 @@ if (file_exists($sc['logo'])) {
         }
         .sheet {
             width: 100% !important;
-            min-height: auto !important;
+            /* Fill the full printable A4 height so the footer sits at the very bottom */
+            min-height: 280mm !important;
             height: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
             box-shadow: none !important;
             padding: 4mm 6mm 4mm 6mm !important;
             margin: 0 !important;
